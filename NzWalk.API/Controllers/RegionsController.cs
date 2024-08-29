@@ -162,11 +162,9 @@ namespace NzWalk.API.Controllers
                 Code = regionDomainModel.Code,
                 Id = regionDomainModel.Id
                 };
-            return Ok();
+            return Ok(regionDto);
             
             }
 
         }
     }
-
-// Next apply Auto mapper 
