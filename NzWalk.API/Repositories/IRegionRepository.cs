@@ -1,4 +1,5 @@
-﻿using NzWalk.API.Models.Domain;
+﻿
+using NzWalk.API.Models.Domain;
 
 namespace NzWalk.API.Repositories
     {
