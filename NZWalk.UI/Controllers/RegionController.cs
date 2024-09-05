@@ -31,5 +31,10 @@ namespace NZWalk.UI.Controllers
 
             return View(response);
             }
+
+
+        public IActionResult Add() {
+            return View();
+            }
         }
     }
