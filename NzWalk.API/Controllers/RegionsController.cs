@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,39 +7,50 @@ using NzWalk.API.Data;
 using NzWalk.API.Models.Domain;
 using NzWalk.API.Models.DTO;
 using NzWalk.API.Repositories;
+using System.Text.Json;
 
 namespace NzWalk.API.Controllers
     {
     [Route("api/[controller]")]
     [ApiController]
+    
     public class RegionsController : ControllerBase
         {
         private readonly NZWalkDbContext dbContext;
         private readonly IRegionRepository iRegionRepository;
         private readonly IMapper mapper;
+        private readonly ILogger<RegionsController> logger;
 
-        public RegionsController(NZWalkDbContext dbContext, IRegionRepository iRegionRepository, IMapper mapper)
+        public RegionsController(NZWalkDbContext dbContext, IRegionRepository iRegionRepository, IMapper mapper, ILogger<RegionsController> logger)
             {
             this.dbContext = dbContext;
             this.iRegionRepository = iRegionRepository;
             this.mapper = mapper;
+            this.logger = logger;
             }
 
         // Get All Regions
         [HttpGet]
+      //  [Authorize(Roles ="Reader")]
         public async Task<IActionResult> GetAllRegions()
             {
+            logger.LogInformation("The getAll region action was invoked");
+            logger.LogWarning("This is warning");
+            logger.LogError("This is an Error");
+
             // Get data from database (Domain Model)
             var regionsDomain = await iRegionRepository.GetAllRegionsAsync();
 
             // convert Domain model to RegionDTo via a Automapper
             // Return Dto data to client (expose Dtos data to client)
+            logger.LogInformation($"Fineshed getall method request with data {JsonSerializer.Serialize(regionsDomain)}");
             return Ok(mapper.Map<List<RegionDTO>>(regionsDomain));
             }
 
 
         //Get single region by Id
         [HttpGet]
+        [Authorize(Roles = "Reader")]
         [Route("{id:Guid}")]
         public async Task<IActionResult> GetRegions([FromRoute] Guid id)
             {
@@ -56,6 +68,7 @@ namespace NzWalk.API.Controllers
 
         // Post Verb to create a region
         [HttpPost]
+        [Authorize(Roles = "Writer")]
         public async Task<IActionResult> CreateRegion([FromBody] CreateRegionDto createRegionDto)
             {
 
@@ -75,6 +88,7 @@ namespace NzWalk.API.Controllers
         // Update region data using put verb
         [HttpPut]
         [Route("{id:Guid}")]
+        [Authorize(Roles = "Writer")]
         public async Task<IActionResult> UpdateRegion([FromRoute] Guid id, [FromBody] UpdateRegionDTO updateRegionDto)
             {
 
@@ -98,6 +112,7 @@ namespace NzWalk.API.Controllers
 
         // Delete the region
         [HttpDelete]
+        [Authorize(Roles = "Writer")]
         [Route("{id:guid}")]
 
         public async Task<IActionResult> DeleteRegion([FromRoute] Guid id)

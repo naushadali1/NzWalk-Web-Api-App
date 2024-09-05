@@ -38,8 +38,13 @@ namespace NzWalk.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] string? filterOn,[FromQuery] string? filterQuery , [FromQuery] string? sortBy, [FromQuery] bool? isAscending , [FromQuery] int pageNumber= 1 , [FromQuery] int pageSize = 100)
             {
-            var walks = await walkRepository.GetAllAsync(filterOn , filterQuery, sortBy , isAscending?? true, pageNumber,pageSize); // Ensure this returns List<Walk>
-            var walkDTOs = mapper.Map<List<WalkDTO>>(walks); // Map List<Walk> to List<WalkDTO>
+            var walks = await walkRepository.GetAllAsync(filterOn , filterQuery, sortBy , isAscending?? true, pageNumber,pageSize); 
+
+            // Create new exceoption
+            throw new Exception("This is new Exception");
+
+            var walkDTOs = mapper.Map<List<WalkDTO>>(walks); 
+            // Map List<Walk> to List<WalkDTO>
             return Ok(walkDTOs);
             }
 

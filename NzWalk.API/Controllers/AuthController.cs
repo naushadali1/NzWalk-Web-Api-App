@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NzWalk.API.Models.DTO;
+using NzWalk.API.Repositories;
 using System.Reflection.Metadata.Ecma335;
 
 namespace NzWalk.API.Controllers
@@ -10,10 +11,12 @@ namespace NzWalk.API.Controllers
     public class AuthController : ControllerBase
         {
         private readonly UserManager<IdentityUser> userManager;
+        private readonly ITokenRepository iTokenRepository;
 
-        public AuthController(UserManager<IdentityUser> userManager)
+        public AuthController(UserManager<IdentityUser> userManager, ITokenRepository iTokenRepository)
             {
             this.userManager = userManager;
+            this.iTokenRepository = iTokenRepository;
             }
 
         [HttpPost]
@@ -45,6 +48,41 @@ namespace NzWalk.API.Controllers
                     }
                 }
          return   BadRequest("User registration Failed!");
+            }
+
+        //Register method
+        [HttpPost]
+        [Route("Login")]
+
+        public async Task<IActionResult> Login( [FromBody] LoginDTO logindto)
+            {
+            var  userName = await userManager.FindByNameAsync(logindto.UserName);
+
+            if (userName != null) { 
+                
+                var checkedPasswor= await userManager.CheckPasswordAsync(userName, logindto.Password);
+
+                if ( checkedPasswor) {
+
+                    // get all roles
+
+                    var roles = await userManager.GetRolesAsync(userName);
+                    // create a token for login
+                    if (roles != null ) {
+
+                      var jwtToken = iTokenRepository.CreateJWTToken(userName, roles.ToList());
+                        var response = new LoginResponeDTO
+                            {
+                            JwtToken = jwtToken,
+                            };
+                        return Ok(response);
+                        }
+
+                   // return an ok  with token
+                   return Ok();
+                    }
+                }
+            return BadRequest("Login Failed Invalid credentials");
             }
 
         }
