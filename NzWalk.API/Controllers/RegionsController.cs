@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using NzWalk.API.Data;
 using NzWalk.API.Models.Domain;
 using NzWalk.API.Models.DTO;
@@ -50,7 +48,7 @@ namespace NzWalk.API.Controllers
 
         //Get single region by Id
         [HttpGet]
-        [Authorize(Roles = "Reader")]
+       // [Authorize(Roles = "Reader")]
         [Route("{id:Guid}")]
         public async Task<IActionResult> GetRegions([FromRoute] Guid id)
             {
@@ -68,7 +66,7 @@ namespace NzWalk.API.Controllers
 
         // Post Verb to create a region
         [HttpPost]
-        [Authorize(Roles = "Writer")]
+       // [Authorize(Roles = "Writer")]
         public async Task<IActionResult> CreateRegion([FromBody] CreateRegionDto createRegionDto)
             {
 
@@ -88,7 +86,7 @@ namespace NzWalk.API.Controllers
         // Update region data using put verb
         [HttpPut]
         [Route("{id:Guid}")]
-        [Authorize(Roles = "Writer")]
+     //   [Authorize(Roles = "Writer")]
         public async Task<IActionResult> UpdateRegion([FromRoute] Guid id, [FromBody] UpdateRegionDTO updateRegionDto)
             {
 
@@ -112,9 +110,9 @@ namespace NzWalk.API.Controllers
 
         // Delete the region
         [HttpDelete]
-        [Authorize(Roles = "Writer")]
-        [Route("{id:guid}")]
-
+        [Route("{id:Guid}")]
+        // [Authorize(Roles = "Writer")]
+        [AllowAnonymous]
         public async Task<IActionResult> DeleteRegion([FromRoute] Guid id)
             {
 
