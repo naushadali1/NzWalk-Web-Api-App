@@ -44,6 +44,7 @@ namespace NzWalk.API.Controllers
             throw new Exception("This is new Exception");
 
             var walkDTOs = mapper.Map<List<WalkDTO>>(walks); 
+
             // Map List<Walk> to List<WalkDTO>
             return Ok(walkDTOs);
             }

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NzWalk.API.Data;
 using NzWalk.API.Models.Domain;
@@ -11,7 +10,6 @@ namespace NzWalk.API.Controllers
     {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class RegionsController : ControllerBase
         {
         private readonly NZWalkDbContext dbContext;
@@ -27,105 +25,91 @@ namespace NzWalk.API.Controllers
             this.logger = logger;
             }
 
-        // Get All Regions
+        // GET: api/regions - Retrieve all regions
         [HttpGet]
-      //  [Authorize(Roles ="Reader")]
         public async Task<IActionResult> GetAllRegions()
             {
-            logger.LogInformation("The getAll region action was invoked");
-            logger.LogWarning("This is warning");
-            logger.LogError("This is an Error");
+            logger.LogInformation("The GetAllRegions action was invoked");
+            try
+                {
+                // Fetch all regions from the repository
+                var regionsDomain = await iRegionRepository.GetAllRegionsAsync();
 
-            // Get data from database (Domain Model)
-            var regionsDomain = await iRegionRepository.GetAllRegionsAsync();
+                // Log the serialized data for debugging
+                logger.LogInformation($"Completed request with data: {JsonSerializer.Serialize(regionsDomain)}");
 
-            // convert Domain model to RegionDTo via a Automapper
-            // Return Dto data to client (expose Dtos data to client)
-            logger.LogInformation($"Fineshed getall method request with data {JsonSerializer.Serialize(regionsDomain)}");
-            return Ok(mapper.Map<List<RegionDTO>>(regionsDomain));
+                // Map domain models to DTOs and return them
+                return Ok(mapper.Map<List<RegionDTO>>(regionsDomain));
+                }
+            catch (Exception ex)
+                {
+                logger.LogError(ex, "Error retrieving regions.");
+                return StatusCode(500, "Internal server error");
+                }
             }
 
-
-        //Get single region by Id
-        [HttpGet]
-       // [Authorize(Roles = "Reader")]
-        [Route("{id:Guid}")]
+        // GET: api/regions/{id} - Retrieve a specific region by ID
+        [HttpGet("{id:Guid}")]
         public async Task<IActionResult> GetRegions([FromRoute] Guid id)
             {
-
-            // get data from Data Base (Model>Domain)
+            // Fetch the region from the repository
             var regionsDomain = await iRegionRepository.GetRegionsAsync(id);
             if (regionsDomain == null)
                 {
                 return NotFound();
                 }
 
-            // Return Dto to client (expose Dtos data to client)
+            // Map domain model to DTO and return
             return Ok(mapper.Map<RegionDTO>(regionsDomain));
             }
 
-        // Post Verb to create a region
+        // POST: api/regions - Create a new region
         [HttpPost]
-       // [Authorize(Roles = "Writer")]
         public async Task<IActionResult> CreateRegion([FromBody] CreateRegionDto createRegionDto)
             {
-
-            // Map DTO to domain Model
+            // Map DTO to domain model
             var regionDomainModel = mapper.Map<Region>(createRegionDto);
 
-            // Use domain model to create region
+            // Save the new region via repository
             regionDomainModel = await iRegionRepository.CreateRegionAsync(regionDomainModel);
 
-            // map domain back to Dto
+            // Map domain model back to DTO and return
             var regionDtos = mapper.Map<RegionDTO>(regionDomainModel);
-
-            // return Dtos to create data
             return CreatedAtAction(nameof(GetRegions), new { id = regionDomainModel.Id }, regionDtos);
             }
 
-        // Update region data using put verb
-        [HttpPut]
-        [Route("{id:Guid}")]
-     //   [Authorize(Roles = "Writer")]
+        // PUT: api/regions/{id} - Update a region by ID
+        [HttpPut("{id:Guid}")]
         public async Task<IActionResult> UpdateRegion([FromRoute] Guid id, [FromBody] UpdateRegionDTO updateRegionDto)
             {
-
-            // dto to domain Model
-
+            // Map DTO to domain model
             var regionDomainModel = mapper.Map<Region>(updateRegionDto);
 
-            //check if the region exists
+            // Update region in the repository
             regionDomainModel = await iRegionRepository.UpdateRegionAsync(id, regionDomainModel);
             if (regionDomainModel == null)
                 {
                 return BadRequest();
                 }
 
-            // map to dto back
+            // Map updated domain model back to DTO and return
             var regionDto = mapper.Map<RegionDTO>(regionDomainModel);
-
-            // return uppdated region
             return Ok(regionDto);
             }
 
-        // Delete the region
-        [HttpDelete]
-        [Route("{id:Guid}")]
-        // [Authorize(Roles = "Writer")]
-        [AllowAnonymous]
+        // DELETE: api/regions/{id} - Delete a region by ID
+        [HttpDelete("{id:Guid}")]
         public async Task<IActionResult> DeleteRegion([FromRoute] Guid id)
             {
-
+            // Delete region via repository
             var regionDomainModel = await iRegionRepository.DeleteRegionAsync(id);
             if (regionDomainModel == null)
                 {
                 return BadRequest();
                 }
 
-            // map to dto and return it 
+            // Map deleted domain model to DTO and return
             return Ok(mapper.Map<RegionDTO>(regionDomainModel));
-
             }
-
         }
     }

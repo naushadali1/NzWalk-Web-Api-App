@@ -80,6 +80,8 @@ namespace NzWalk.API.Controllers
                     // Generate a JWT token if the user has roles.
                     if (roles != null)
                         {
+
+
                         //create token
                         var jwtToken = iTokenRepository.CreateJWTToken(userName, roles.ToList()); 
 

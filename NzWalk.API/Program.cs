@@ -11,31 +11,35 @@ using Microsoft.Extensions.FileProviders;
 using Serilog;
 using NzWalk.API.Middlewares;
 
+// Create the web application builder
 var builder = WebApplication.CreateBuilder(args);
 
-
+// Retrieve connection strings for the databases from configuration
 var NzWalkConString = builder.Configuration.GetConnectionString("NzWalkConString");
 var NzWalkAuthConString = builder.Configuration.GetConnectionString("NzWalkAuthConString");
 
-// Add services to the container.
-
+// Configure logging using Serilog
 var logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .WriteTo.File("Logs/NzWalk_log.txt", rollingInterval: RollingInterval.Day)
-    .MinimumLevel.Information()
+    .WriteTo.Console() // Log to console
+    .WriteTo.File("Logs/NzWalk_log.txt", rollingInterval: RollingInterval.Day) // Log to file with daily rolling
+    .MinimumLevel.Information() // Set minimum log level to Information
     .CreateLogger();
 
-builder.Logging.ClearProviders();
-builder.Logging.AddSerilog(logger);
+builder.Logging.ClearProviders(); // Clear default logging providers
+builder.Logging.AddSerilog(logger); // Add Serilog as the logging provider
 
+// Add MVC controllers to the service container
 builder.Services.AddControllers();
+
+// Add HttpContextAccessor to access HTTP context
 builder.Services.AddHttpContextAccessor();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Configure Swagger/OpenAPI for API documentation
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options=>
+builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "NZ Waalk App", Version = "v1" });
-    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "NZ Walk App", Version = "v1" }); // Set Swagger title and version
+    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
         {
         Name = "Authorization",
         In = ParameterLocation.Header,
@@ -44,83 +48,93 @@ builder.Services.AddSwaggerGen(options=>
         });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
+            new OpenApiSecurityScheme
             {
-            new OpenApiSecurityScheme 
+                Reference = new OpenApiReference
                 {
-                 Reference = new OpenApiReference
-                     {
-                     Type = ReferenceType.SecurityScheme,
-                     Id = JwtBearerDefaults.AuthenticationScheme
-                     },
-
-                 Scheme = "Oauth2",
-                 Name =  JwtBearerDefaults.AuthenticationScheme,
-                 In = ParameterLocation.Header
+                    Type = ReferenceType.SecurityScheme,
+                    Id = JwtBearerDefaults.AuthenticationScheme
                 },
+                Scheme = "Oauth2",
+                Name = JwtBearerDefaults.AuthenticationScheme,
+                In = ParameterLocation.Header
+            },
             new List<string>()
-            }
-
-        });
+        }
+    });
 });
 
+// Configure Entity Framework Core to use SQL Server for database contexts
 builder.Services.AddDbContext<NZWalkDbContext>(options => options.UseSqlServer(NzWalkConString));
 builder.Services.AddDbContext<NZWalkAuthDbContext>(options => options.UseSqlServer(NzWalkAuthConString));
 
+// Register repository implementations for dependency injection
 builder.Services.AddScoped<IRegionRepository, SqlRegionRepository>();
 builder.Services.AddScoped<IWalkRepository, SQLWalkRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
-builder.Services.AddScoped<IImageRrpository, LocalImageRepositoory>();
+builder.Services.AddScoped<IImageRrpository, LocalImageRepository>();
+
+// Configure AutoMapper for mapping objects
 builder.Services.AddAutoMapper(typeof(ProfileMappers));
 
+// Configure Identity for authentication and authorization
 builder.Services.AddIdentityCore<IdentityUser>()
     .AddRoles<IdentityRole>()
     .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("NZWalk")
     .AddEntityFrameworkStores<NZWalkAuthDbContext>()
     .AddDefaultTokenProviders();
 
+// Configure Identity options
 builder.Services.Configure<IdentityOptions>(options =>
 {
-    options.Password.RequireNonAlphanumeric= false;
-    options.Password.RequireDigit= false;
-    options.Password.RequiredLength= 8;
-    options.Password.RequireLowercase= false;
-    options.Password.RequireUppercase= false;
-    options.Password.RequiredUniqueChars = 1;
+    options.Password.RequireNonAlphanumeric = false; // Passwords do not require non-alphanumeric characters
+    options.Password.RequireDigit = false; 
+    options.Password.RequiredLength = 8; 
+    options.Password.RequireLowercase = false; 
+    options.Password.RequireUppercase = false; 
+    options.Password.RequiredUniqueChars = 1; 
 });
 
+// Configure JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(option=> option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters 
+    .AddJwtBearer(option => option.TokenValidationParameters = new TokenValidationParameters
         {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        ValidateIssuer = true, // Validate the token issuer
+        ValidateAudience = true, // Validate the token audience
+        ValidateLifetime = true, // Validate the token lifetime
+        ValidateIssuerSigningKey = true, // Validate the token signing key
+        ValidIssuer = builder.Configuration["Jwt:Issuer"], // Set valid issuer from configuration
+        ValidAudience = builder.Configuration["Jwt:Audience"], // Set valid audience from configuration
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) // Set signing key from configuration
         });
 
+// Build the web application
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
     {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger(); // Enable Swagger in development environment
+    app.UseSwaggerUI(); // Enable Swagger UI for API documentation
     }
 
-app.UseMiddleware<ExceptionHandlerMiddelware>();
+app.UseMiddleware<ExceptionHandlerMiddelware>(); // Use custom exception handling middleware
 
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseHttpsRedirection(); // Redirect HTTP requests to HTTPS
+app.UseAuthentication(); // Enable authentication middleware
+app.UseAuthorization(); // Enable authorization middleware
 
+// Serve static files from the "Images" directory
 app.UseStaticFiles(new StaticFileOptions
     {
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Images")),
     RequestPath = "/Images"
     });
 
+// Map API controllers to routes
 app.MapControllers();
+
+// Run the application
 app.Run();
