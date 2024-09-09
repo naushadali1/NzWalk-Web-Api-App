@@ -1,0 +1,41 @@
+﻿@model NZWalk.UI.Models.DTO.RegionDTO
+@{
+    // This section is for the Edit Region page.
+}
+
+<h1 class="mt-3">Edit Region</h1>
+
+@if (Model is not null)
+    {
+    
+    <form method="post">
+
+        <!-- ID field (readonly, as it should not be modified) -->
+        <div class="mb-3">
+            <label class="form-label">Id</label>
+            <input type="text" class="form-control" asp-for="Id" readonly>
+        </div>
+
+        <!-- Name field for editing the region's name -->
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" asp-for="Name">
+        </div>
+
+        <!-- Code field for editing the region's code -->
+        <div class="mb-3">
+            <label class="form-label">Code</label>
+            <input type="text" class="form-control" asp-for="Code">
+        </div>
+
+        <!-- Image URL field for editing the region's image URL -->
+        <div class="mb-3">
+            <label class="form-label">Image Url</label>
+            <input type="text" class="form-control" asp-for="RegionImageUrl">
+        </div>
+
+        <!-- Button to submit the form and update the region -->
+        <button type="submit" class="btn btn-primary">Update</button>
+
+    </form>
+    }

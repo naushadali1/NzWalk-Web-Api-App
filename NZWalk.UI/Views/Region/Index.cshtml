@@ -1,31 +1,48 @@
 ﻿@model IEnumerable<NZWalk.UI.Models.DTO.RegionDTO>
 
 @{
-
+    // This section displays a table of regions.
 }
-<h1 class="mt-5">Regions </h1>
 
-<table class="table table-hover">
+<h1 class="mt-5 text-center">Regions Page</h1>
+
+<!-- Button to add a new region -->
+<div class="d-flex justify-content-end my-4 mb-5">
+    <a asp-action="add" asp-controller="region" class="btn btn-lg btn-success">Add new Region</a>
+</div>
+
+
+<!-- Table -->
+<table class="table table-hover border table-bordered">
     <thead>
         <tr>
-            <th scope="col">Region Id</th>
-            <th scope="col">Region Code</th>
-            <th scope="col">Region Name</th>
+            <th scope="col">Region Id</th> 
+            <th scope="col">Region Code</th> 
+            <th scope="col">Region Name</th> 
+            <th scope="col" colspan="2">Action</th> 
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model) // Loop through the regions in the Model
             {
-            
-        <tr>
-            <th scope="row">@item.Id</th>
-            <td>@item.Code</td>
-            <td>@item.Name</td>
-           
-        </tr>
+            <tr>
+                <th scope="row">@item.Id</th> 
+                <td>@item.Code</td> 
+                <td>@item.Name</td> 
+                <td>
+                    <!-- Edit button to navigate to the Edit page for the region -->
+                    <a asp-action="Edit" asp-controller="Region" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Edit</a>
+                </td>
+                <td>
+                    <!-- Delete button inside a form to send a POST request with the region's Id -->
+                    <form asp-action="Delete" asp-controller="Region" method="post">
+                        <input type="hidden" name="Id" value="@item.Id" /> <!-- Hidden input to store the region's Id -->
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button> 
+                    </form>
+                </td>
+            </tr>
             }
-
-        <a asp-action="add" asp-controller="region" class="btn btn-primary">  Create new Region</a>
     </tbody>
-
 </table>
+
+
